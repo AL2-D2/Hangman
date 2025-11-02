@@ -1,13 +1,34 @@
-﻿Game.Start();
+﻿using System.Timers;
+Game.Start();
 class Game
 {
     public static int remaining = 5;
+    public static int timeLeft = 10;
     public static string word = Display.ChoiceWord();
     public static char[] chars = word.ToCharArray();
+    public static System.Timers.Timer timer;
 
+ 
+    private static void OnTimedEvent(Object source, System.Timers.ElapsedEventArgs e)
+    {
+        timeLeft--;    
+        if (timeLeft <= 0)
+        {
+            timer.Stop();
+        }
+        if(timeLeft % 5 == 0)
+        {
+            Console.WriteLine();
+            Display.Table(remaining,word);
+        }
+    }
     public static void Start()
     {
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += OnTimedEvent;
+        timer.Start();
         Display.blank = new char[word.Length];
+        
         int number = 0;
         bool end = false;
         for (int i = 0;  i < word.Length; i++)
@@ -15,10 +36,26 @@ class Game
             Display.blank[i] = '_';
         }
         do
-        {          
+        {
+            if (!Display.blank.Contains('_'))
+            {
+                Console.WriteLine("you win!");
+                end = true;
+            }
+            if (remaining <= 0 && end == false)
+            {
+                Console.WriteLine("you lost!");
+                end = true;
+            }
+            if (timeLeft <= 0 && end == false)
+            {
+                Console.WriteLine("time's up! you lost!");
+                end = true;
+                break;
+            }
             bool found = false;
             Display.Table(remaining, word);
-            char answer = Convert.ToChar(Console.ReadLine().ToUpper());
+            char answer = Convert.ToChar(Console.ReadLine().ToUpper());        
             for (int i = 0; i < word.Length; i++)
             {
                 if (answer == chars[i])
@@ -30,21 +67,13 @@ class Game
             if (!found)
             {
                 remaining--;
-                if(number < Display.incorrect.Length) { 
+                if(number < Display.incorrect.Length)
+                { 
                 Display.incorrect[number] = answer;
                 number++;
                 }
             }
-            if (!Display.blank.Contains('_'))
-            {
-                Console.WriteLine("you win!");
-                end = true;
-            }
-            if (remaining <= 0 && end == false)
-            {
-                Console.WriteLine("you lost!");
-            }
-        } while (remaining > 0);
+        } while (end == false);
     }
 }
 class Display
@@ -68,6 +97,7 @@ class Display
     }
     public static void Table(int remaining, string word)
     {       
+        
         Console.Write("Word: ");
         for(int i= 0;  i < blank.Length; i++)
         {           
@@ -81,7 +111,8 @@ class Display
             Console.Write(incorrect[i]);
         }
         Console.Write(" |");
-      Console.Write($"Guess: ");
+        Console.Write($"Time left: {Game.timeLeft} |");
+        Console.Write($" Guess: ");    
     }    
 }
 
